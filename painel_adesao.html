@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Municípios</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .actions {
+            display: none;
+        }
+        #map {
+            height: 500px;
+            width: 100%;
+            margin-top: 20px;
+        }
+    </style>
+    <script>
+        function toggleActions(id, button) {
+            var row = document.getElementById(id);
+            var expanded = row.style.display === "none";
+            row.style.display = expanded ? "table-row" : "none";
+            button.setAttribute("aria-expanded", expanded);
+        }
+
+        function getRandomIndicator() {
+            let mean = 0.5, stdDev = 0.15;
+            let u1 = Math.random(), u2 = Math.random();
+            let z = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+            let value = mean + stdDev * z;
+            return Math.max(0, Math.min(1, value)).toFixed(2);
+        }
+    </script>
+</head>
+<body>
+    <h2>Painel de Municípios</h2>
+    <div id="map" role="application" aria-label="Mapa do Brasil com municípios destacados"></div>
+    <table>
+        <thead>
+            <tr>
+                <th>Município</th>
+                <th>Ações</th>
+                <th>Conselho Municipal</th>
+                <th>Reunião do Conselho</th>
+                <th>Conferência Municipal</th>
+                <th>Fundo Municipal</th>
+                <th>Plano Municipal</th>
+                <th>Indicador Sintético</th>
+            </tr>
+        </thead>
+        <tbody>
+            <script>
+                const municipios = ["São Paulo", "Rio de Janeiro", "Belo Horizonte", "Porto Alegre", "Salvador", "Fortaleza", "Curitiba", "Recife", "Goiânia", "Belém"];
+
+                let map = L.map('map').setView([-15.7801, -47.9292], 4);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+
+                municipios.forEach((municipio, index) => {
+                    let indicador = getRandomIndicator();
+                    let color = indicador >= 0.7 ? 'green' : indicador >= 0.4 ? 'orange' : 'red';
+
+                    document.write(`<tr>
+                        <td>${municipio}</td>
+                        <td><button onclick="toggleActions('actions-${index}', this)" aria-expanded="false" aria-label="Expandir ações para ${municipio}">+</button></td>
+                        <td>✅</td>
+                        <td>🔵</td>
+                        <td>❌</td>
+                        <td>✅</td>
+                        <td>🔵</td>
+                        <td>${indicador}</td>
+                    </tr>`);
+
+                    L.circleMarker([-15.7801 + (Math.random() * 10 - 5), -47.9292 + (Math.random() * 10 - 5)], {
+                        radius: 8,
+                        color: color,
+                        fillColor: color,
+                        fillOpacity: 0.6
+                    }).bindPopup(`<b>${municipio}</b><br>Indicador: ${indicador}`).addTo(map);
+                });
+            </script>
+        </tbody>
+    </table>
+</body>
+</html>
