@@ -48,22 +48,6 @@
             margin-right: 5px;
         }
     </style>
-    <script>
-        function toggleActions(id, button) {
-            var row = document.getElementById(id);
-            var expanded = row.style.display === "none";
-            row.style.display = expanded ? "table-row" : "none";
-            button.setAttribute("aria-expanded", expanded ? "true" : "false");
-        }
-
-        function getRandomIndicator() {
-            let mean = 0.5, stdDev = 0.15;
-            let u1 = Math.random(), u2 = Math.random();
-            let z = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
-            let value = mean + stdDev * z;
-            return Math.max(0, Math.min(1, value)).toFixed(2);
-        }
-    </script>
 </head>
 <body>
     <h2>Painel de Municípios</h2>
@@ -82,32 +66,41 @@
             </tr>
         </thead>
         <tbody id="municipios-body">
-            <!-- Linhas dos municípios serão geradas aqui via JavaScript -->
+            <tr>
+                <td>São Paulo</td>
+                <td><button>+</button></td>
+                <td>✅</td>
+                <td>🔵</td>
+                <td>❌</td>
+                <td>✅</td>
+                <td>🔵</td>
+                <td>0.75</td>
+            </tr>
+            <tr id="actions-0" style="display:none;">
+                <td colspan="8">
+                    <b>Eixo I</b> - Desenvolver ações para melhorar a gestão e participação social.<br>
+                    <b>Iniciativa I.1</b> - Lorem ipsum dolor sit amet.<br>
+                    <b>Iniciativa I.2</b> - Lorem ipsum dolor sit amet.<br><br>
+
+                    <b>Eixo II</b> - Enfrentar o capacitismo e a violência contra as pessoas com deficiência.<br>
+                    <b>Iniciativa II.1</b> - Lorem ipsum dolor sit amet.<br>
+                    <b>Iniciativa II.2</b> - Lorem ipsum dolor sit amet.<br><br>
+
+                    <b>Eixo III</b> - Promover a acessibilidade.<br>
+                    <b>Iniciativa III.1</b> - Lorem ipsum dolor sit amet.<br>
+                    <b>Iniciativa III.2</b> - Lorem ipsum dolor sit amet.
+                </td>
+            </tr>
+            <!-- Repita para os outros municípios -->
         </tbody>
     </table>
 
     <script>
-        const municipios = [
-            {nome: "São Paulo", lat: -23.5505, lng: -46.6333},
-            {nome: "Rio de Janeiro", lat: -22.9068, lng: -43.1729},
-            {nome: "Belo Horizonte", lat: -19.9167, lng: -43.9345},
-            {nome: "Porto Alegre", lat: -30.0346, lng: -51.2177},
-            {nome: "Salvador", lat: -12.9777, lng: -38.5016},
-            {nome: "Fortaleza", lat: -3.7172, lng: -38.5433},
-            {nome: "Curitiba", lat: -25.4284, lng: -49.2733},
-            {nome: "Recife", lat: -8.0476, lng: -34.877},
-            {nome: "Goiânia", lat: -16.6809, lng: -49.2539},
-            {nome: "Belém", lat: -1.4558, lng: -48.4902}
-        ];
-        
-        const tableBody = document.getElementById('municipios-body');
-
         let map = L.map('map').setView([-15.7801, -47.9292], 4);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Criando a legenda
         const legend = L.control({position: 'topright'});
         legend.onAdd = function () {
             const div = L.DomUtil.create('div', 'legend');
@@ -118,41 +111,13 @@
         };
         legend.addTo(map);
 
-        municipios.forEach((municipio, index) => {
-            let indicador = getRandomIndicator();
-            let color = indicador >= 0.7 ? 'green' : indicador >= 0.4 ? 'orange' : 'red';
-
-            // Criando a linha da tabela
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${municipio.nome}</td>
-                <td><button onclick="toggleActions('actions-${index}', this)" aria-expanded="false" aria-label="Expandir ações para ${municipio.nome}">+</button></td>
-                <td>✅</td>
-                <td>🔵</td>
-                <td>❌</td>
-                <td>✅</td>
-                <td>🔵</td>
-                <td>${indicador}</td>
-            `;
-            tableBody.appendChild(row);
-
-            // Adicionando marcador no mapa
-            L.circleMarker([municipio.lat, municipio.lng], {
-                radius: 8,
-                color: color,
-                fillColor: color,
-                fillOpacity: 0.6
-            }).bindPopup(`<b>${municipio.nome}</b><br>Indicador: ${indicador}`).addTo(map);
-
-            // Criando linha para as ações
-            const actionsRow = document.createElement('tr');
-            actionsRow.id = `actions-${index}`;
-            actionsRow.style.display = "none";
-            actionsRow.innerHTML = `
-                <td colspan="8">Detalhes das ações para ${municipio.nome}: Ações específicas aqui...</td>
-            `;
-            tableBody.appendChild(actionsRow);
-        });
+        // Criando o marcador para São Paulo
+        L.circleMarker([-23.5505, -46.6333], {
+            radius: 8,
+            color: 'green',
+            fillColor: 'green',
+            fillOpacity: 0.6
+        }).bindPopup('<b>São Paulo</b><br>Indicador: 0.75').addTo(map);
     </script>
 </body>
 </html>
