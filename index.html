@@ -103,4 +103,60 @@
 
         let map = L.map('map').setView([-15.7801, -47.9292], 4);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attributio
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Criando a legenda
+        const legend = L.control({position: 'topright'});
+        legend.onAdd = function () {
+            const div = L.DomUtil.create('div', 'legend');
+            div.innerHTML += '<div><span style="background: green;"></span> Indicador alto (>=0.7)</div>';
+            div.innerHTML += '<div><span style="background: orange;"></span> Indicador médio (>=0.4)</div>';
+            div.innerHTML += '<div><span style="background: red;"></span> Indicador baixo (<0.4)</div>';
+            return div;
+        };
+        legend.addTo(map);
+
+        municipios.forEach((municipio, index) => {
+            let indicador = getRandomIndicator();
+            let color = indicador >= 0.7 ? 'green' : indicador >= 0.4 ? 'orange' : 'red';
+
+            // Criando a linha da tabela
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${municipio.nome}</td>
+                <td><button onclick="toggleActions('actions-${index}', this)" aria-expanded="false" aria-label="Expandir ações para ${municipio.nome}">+</button></td>
+                <td>✅</td>
+                <td>🔵</td>
+                <td>❌</td>
+                <td>✅</td>
+                <td>🔵</td>
+                <td>${indicador}</td>
+            `;
+            tableBody.appendChild(row);
+
+            // Adicionando marcador no mapa com coordenadas exatas
+            L.circleMarker([municipio.lat, municipio.lon], {
+                radius: 8,
+                color: color,
+                fillColor: color,
+                fillOpacity: 0.6
+            }).bindPopup(`<b>${municipio.nome}</b><br>Indicador: ${indicador}`).addTo(map);
+
+            // Criando linha para as ações
+            const actionsRow = document.createElement('tr');
+            actionsRow.id = `actions-${index}`;
+            actionsRow.style.display = "none";
+            actionsRow.innerHTML = `
+                <td colspan="8">
+                    <b>Iniciativa I.1</b> - Desenvolver ações para melhorar a gestão e participação social.<br>
+                    <b>Iniciativa II.2</b> - Enfrentar o capacitismo e a violência contra as pessoas com deficiência.<br>
+                    <b>Iniciativa III.3</b> - Promover a acessibilidade e a tecnologia assistiva.<br>
+                    <b>Iniciativa IV.4</b> - Promover políticas para a educação, saúde, assistência social e direitos culturais.
+                </td>
+            `;
+            tableBody.appendChild(actionsRow);
+        });
+    </script>
+</body>
+</html>
