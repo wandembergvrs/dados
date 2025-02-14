@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
@@ -14,7 +14,6 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
         }
         th, td {
             border: 1px solid #ddd;
@@ -23,15 +22,14 @@
         }
         th {
             background-color: #f4f4f4;
-            cursor: pointer;
         }
         .actions {
             display: none;
-            text-align: left;
         }
         #map {
             height: 500px;
             width: 100%;
+            margin-top: 20px;
         }
         .legend {
             background-color: white;
@@ -65,47 +63,12 @@
             let value = mean + stdDev * z;
             return Math.max(0, Math.min(1, value)).toFixed(2);
         }
-
-        function sortTable(n) {
-            const table = document.getElementById("municipios-table");
-            let rows = table.rows;
-            let switching = true;
-            let dir = "desc";
-            let switchCount = 0;
-            
-            while (switching) {
-                switching = false;
-                let shouldSwitch = false;
-                for (let i = 1; i < (rows.length - 1); i++) {
-                    let x = rows[i].getElementsByTagName("TD")[n];
-                    let y = rows[i + 1].getElementsByTagName("TD")[n];
-                    let xVal = parseFloat(x.innerHTML);
-                    let yVal = parseFloat(y.innerHTML);
-                    
-                    if (dir === "desc" && xVal < yVal || dir === "asc" && xVal > yVal) {
-                        shouldSwitch = true;
-                        break;
-                    }
-                }
-                
-                if (shouldSwitch) {
-                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                    switching = true;
-                    switchCount++;
-                } else {
-                    if (switchCount === 0 && dir === "desc") {
-                        dir = "asc";
-                        switching = true;
-                    }
-                }
-            }
-        }
     </script>
 </head>
 <body>
     <h2>Painel de Municípios</h2>
     <div id="map" role="application" aria-label="Mapa do Brasil com municípios destacados"></div>
-    <table id="municipios-table">
+    <table>
         <thead>
             <tr>
                 <th>Município</th>
@@ -115,7 +78,7 @@
                 <th>Conferência Municipal</th>
                 <th>Fundo Municipal</th>
                 <th>Plano Municipal</th>
-                <th onclick="sortTable(7)">Indicador Sintético</th>
+                <th>Indicador Sintético</th>
             </tr>
         </thead>
         <tbody id="municipios-body">
@@ -125,17 +88,18 @@
 
     <script>
         const municipios = [
-            { nome: "São Paulo", lat: -23.5505, lon: -46.6333 },
-            { nome: "Rio de Janeiro", lat: -22.9068, lon: -43.1729 },
-            { nome: "Belo Horizonte", lat: -19.9167, lon: -43.9345 },
-            { nome: "Porto Alegre", lat: -30.0346, lon: -51.2177 },
-            { nome: "Salvador", lat: -12.9777, lon: -38.5016 },
-            { nome: "Fortaleza", lat: -3.7172, lon: -38.5433 },
-            { nome: "Curitiba", lat: -25.4284, lon: -49.2733 },
-            { nome: "Recife", lat: -8.0476, lon: -34.877 },
-            { nome: "Goiânia", lat: -16.6809, lon: -49.2539 },
-            { nome: "Belém", lat: -1.4558, lon: -48.4902 }
+            {nome: "São Paulo", lat: -23.5505, lng: -46.6333},
+            {nome: "Rio de Janeiro", lat: -22.9068, lng: -43.1729},
+            {nome: "Belo Horizonte", lat: -19.9167, lng: -43.9345},
+            {nome: "Porto Alegre", lat: -30.0346, lng: -51.2177},
+            {nome: "Salvador", lat: -12.9777, lng: -38.5016},
+            {nome: "Fortaleza", lat: -3.7172, lng: -38.5433},
+            {nome: "Curitiba", lat: -25.4284, lng: -49.2733},
+            {nome: "Recife", lat: -8.0476, lng: -34.877},
+            {nome: "Goiânia", lat: -16.6809, lng: -49.2539},
+            {nome: "Belém", lat: -1.4558, lng: -48.4902}
         ];
+        
         const tableBody = document.getElementById('municipios-body');
 
         let map = L.map('map').setView([-15.7801, -47.9292], 4);
@@ -172,8 +136,8 @@
             `;
             tableBody.appendChild(row);
 
-            // Adicionando marcador no mapa com coordenadas exatas
-            L.circleMarker([municipio.lat, municipio.lon], {
+            // Adicionando marcador no mapa
+            L.circleMarker([municipio.lat, municipio.lng], {
                 radius: 8,
                 color: color,
                 fillColor: color,
@@ -185,19 +149,7 @@
             actionsRow.id = `actions-${index}`;
             actionsRow.style.display = "none";
             actionsRow.innerHTML = `
-                <td colspan="8" class="actions">
-                    <b>Eixo I</b> - Desenvolver ações para melhorar a gestão e participação social.<br>
-                    <b>Iniciativa I.1</b> - Lorem ipsum dolor sit amet.<br>
-                    <b>Iniciativa I.2</b> - Lorem ipsum dolor sit amet.<br><br>
-
-                    <b>Eixo II</b> - Enfrentar o capacitismo e a violência contra as pessoas com deficiência.<br>
-                    <b>Iniciativa II.1</b> - Lorem ipsum dolor sit amet.<br>
-                    <b>Iniciativa II.2</b> - Lorem ipsum dolor sit amet.<br><br>
-
-                    <b>Eixo III</b> - Promover a acessibilidade.<br>
-                    <b>Iniciativa III.1</b> - Lorem ipsum dolor sit amet.<br>
-                    <b>Iniciativa III.2</b> - Lorem ipsum dolor sit amet.
-                </td>
+                <td colspan="8">Detalhes das ações para ${municipio.nome}: Ações específicas aqui...</td>
             `;
             tableBody.appendChild(actionsRow);
         });
