@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
@@ -63,6 +63,23 @@
             let value = mean + stdDev * z;
             return Math.max(0, Math.min(1, value)).toFixed(2);
         }
+
+        // Definir as ações mais abrangentes
+        const actionsTemplate = `
+            <b>Eixo I - Desenvolver ações para melhorar a gestão e participação social:</b><br>
+            Iniciativa I.1 - Lorem ipsum dolor sit amet.<br>
+            Iniciativa I.2 - Consectetur adipiscing elit.<br><br>
+            
+            <b>Eixo II - Enfrentar o capacitismo e a violência contra as pessoas com deficiência:</b><br>
+            Iniciativa II.1 - Lorem ipsum dolor sit amet.<br>
+            Iniciativa II.2 - Consectetur adipiscing elit.<br><br>
+            
+            <b>Eixo III - Promover a acessibilidade e a tecnologia assistiva:</b><br>
+            Iniciativa III.1 - Lorem ipsum dolor sit amet.<br><br>
+            
+            <b>Eixo IV - Promover políticas para a educação, saúde, assistência social e direitos culturais:</b><br>
+            Iniciativa IV.1 - Lorem ipsum dolor sit amet.<br><br>
+        `;
     </script>
 </head>
 <body>
@@ -100,6 +117,9 @@
             {nome: "Belém", lat: -1.4558, lng: -48.4902}
         ];
         
+        // Ordenando municípios pelo indicador (do mais alto para o mais baixo)
+        municipios.sort((a, b) => getRandomIndicator() - getRandomIndicator());
+
         const tableBody = document.getElementById('municipios-body');
 
         let map = L.map('map').setView([-15.7801, -47.9292], 4);
@@ -149,7 +169,7 @@
             actionsRow.id = `actions-${index}`;
             actionsRow.style.display = "none";
             actionsRow.innerHTML = `
-                <td colspan="8">Detalhes das ações para ${municipio.nome}: Ações específicas aqui...</td>
+                <td colspan="8">${actionsTemplate}</td>
             `;
             tableBody.appendChild(actionsRow);
         });
