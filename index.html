@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
@@ -6,6 +6,11 @@
     <title>Painel de Municípios</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <!-- Adicionar o CSS do DataTables -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
+    <!-- Adicionar o JS do DataTables -->
+    <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -25,6 +30,7 @@
         }
         .actions {
             display: none;
+            text-align: left;
         }
         #map {
             height: 500px;
@@ -49,13 +55,6 @@
         }
     </style>
     <script>
-        function toggleActions(id, button) {
-            var row = document.getElementById(id);
-            var expanded = row.style.display === "none";
-            row.style.display = expanded ? "table-row" : "none";
-            button.setAttribute("aria-expanded", expanded ? "true" : "false");
-        }
-
         function getRandomIndicator() {
             let mean = 0.5, stdDev = 0.15;
             let u1 = Math.random(), u2 = Math.random();
@@ -63,29 +62,13 @@
             let value = mean + stdDev * z;
             return Math.max(0, Math.min(1, value)).toFixed(2);
         }
-
-        // Definir as ações mais abrangentes
-        const actionsTemplate = `
-            <b>Eixo I - Desenvolver ações para melhorar a gestão e participação social:</b><br>
-            Iniciativa I.1 - Lorem ipsum dolor sit amet.<br>
-            Iniciativa I.2 - Consectetur adipiscing elit.<br><br>
-            
-            <b>Eixo II - Enfrentar o capacitismo e a violência contra as pessoas com deficiência:</b><br>
-            Iniciativa II.1 - Lorem ipsum dolor sit amet.<br>
-            Iniciativa II.2 - Consectetur adipiscing elit.<br><br>
-            
-            <b>Eixo III - Promover a acessibilidade e a tecnologia assistiva:</b><br>
-            Iniciativa III.1 - Lorem ipsum dolor sit amet.<br><br>
-            
-            <b>Eixo IV - Promover políticas para a educação, saúde, assistência social e direitos culturais:</b><br>
-            Iniciativa IV.1 - Lorem ipsum dolor sit amet.<br><br>
-        `;
     </script>
 </head>
 <body>
     <h2>Painel de Municípios</h2>
     <div id="map" role="application" aria-label="Mapa do Brasil com municípios destacados"></div>
-    <table>
+
+    <table id="municipios-table">
         <thead>
             <tr>
                 <th>Município</th>
@@ -105,21 +88,17 @@
 
     <script>
         const municipios = [
-            {nome: "São Paulo", lat: -23.5505, lng: -46.6333},
-            {nome: "Rio de Janeiro", lat: -22.9068, lng: -43.1729},
-            {nome: "Belo Horizonte", lat: -19.9167, lng: -43.9345},
-            {nome: "Porto Alegre", lat: -30.0346, lng: -51.2177},
-            {nome: "Salvador", lat: -12.9777, lng: -38.5016},
-            {nome: "Fortaleza", lat: -3.7172, lng: -38.5433},
-            {nome: "Curitiba", lat: -25.4284, lng: -49.2733},
-            {nome: "Recife", lat: -8.0476, lng: -34.877},
-            {nome: "Goiânia", lat: -16.6809, lng: -49.2539},
-            {nome: "Belém", lat: -1.4558, lng: -48.4902}
+            { nome: "São Paulo", lat: -23.5505, lon: -46.6333, conselho: "✅", fundo: "✅", indicador: getRandomIndicator() },
+            { nome: "Rio de Janeiro", lat: -22.9068, lon: -43.1729, conselho: "✅", fundo: "❌", indicador: getRandomIndicator() },
+            { nome: "Belo Horizonte", lat: -19.9167, lon: -43.9345, conselho: "✅", fundo: "✅", indicador: getRandomIndicator() },
+            { nome: "Porto Alegre", lat: -30.0346, lon: -51.2177, conselho: "✅", fundo: "❌", indicador: getRandomIndicator() },
+            { nome: "Salvador", lat: -12.9777, lon: -38.5016, conselho: "✅", fundo: "✅", indicador: getRandomIndicator() },
+            { nome: "Fortaleza", lat: -3.7172, lon: -38.5433, conselho: "❌", fundo: "✅", indicador: getRandomIndicator() },
+            { nome: "Curitiba", lat: -25.4284, lon: -49.2733, conselho: "✅", fundo: "✅", indicador: getRandomIndicator() },
+            { nome: "Recife", lat: -8.0476, lon: -34.877, conselho: "✅", fundo: "✅", indicador: getRandomIndicator() },
+            { nome: "Goiânia", lat: -16.6809, lon: -49.2539, conselho: "✅", fundo: "❌", indicador: getRandomIndicator() },
+            { nome: "Belém", lat: -1.4558, lon: -48.4902, conselho: "✅", fundo: "✅", indicador: getRandomIndicator() }
         ];
-        
-        // Ordenando municípios pelo indicador (do mais alto para o mais baixo)
-        municipios.sort((a, b) => getRandomIndicator() - getRandomIndicator());
-
         const tableBody = document.getElementById('municipios-body');
 
         let map = L.map('map').setView([-15.7801, -47.9292], 4);
@@ -139,39 +118,57 @@
         legend.addTo(map);
 
         municipios.forEach((municipio, index) => {
-            let indicador = getRandomIndicator();
-            let color = indicador >= 0.7 ? 'green' : indicador >= 0.4 ? 'orange' : 'red';
+            let color = municipio.indicador >= 0.7 ? 'green' : municipio.indicador >= 0.4 ? 'orange' : 'red';
 
             // Criando a linha da tabela
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${municipio.nome}</td>
                 <td><button onclick="toggleActions('actions-${index}', this)" aria-expanded="false" aria-label="Expandir ações para ${municipio.nome}">+</button></td>
-                <td>✅</td>
+                <td>${municipio.conselho}</td>
                 <td>🔵</td>
                 <td>❌</td>
-                <td>✅</td>
+                <td>${municipio.fundo}</td>
                 <td>🔵</td>
-                <td>${indicador}</td>
+                <td>${municipio.indicador}</td>
             `;
             tableBody.appendChild(row);
 
-            // Adicionando marcador no mapa
-            L.circleMarker([municipio.lat, municipio.lng], {
+            // Adicionando marcador no mapa com coordenadas exatas
+            L.circleMarker([municipio.lat, municipio.lon], {
                 radius: 8,
                 color: color,
                 fillColor: color,
                 fillOpacity: 0.6
-            }).bindPopup(`<b>${municipio.nome}</b><br>Indicador: ${indicador}`).addTo(map);
+            }).bindPopup(`<b>${municipio.nome}</b><br>Indicador: ${municipio.indicador}<br>Conselho Municipal: ${municipio.conselho}<br>Fundo Municipal: ${municipio.fundo}`).addTo(map);
 
             // Criando linha para as ações
             const actionsRow = document.createElement('tr');
             actionsRow.id = `actions-${index}`;
             actionsRow.style.display = "none";
             actionsRow.innerHTML = `
-                <td colspan="8">${actionsTemplate}</td>
+                <td colspan="8" class="actions">
+                    <b>Eixo I</b> - Desenvolver ações para melhorar a gestão e participação social.<br>
+                    <b>Iniciativa I.1</b> - Lorem ipsum dolor sit amet.<br>
+                    <b>Iniciativa I.2</b> - Lorem ipsum dolor sit amet.<br><br>
+
+                    <b>Eixo II</b> - Enfrentar o capacitismo e a violência contra as pessoas com deficiência.<br>
+                    <b>Iniciativa II.1</b> - Lorem ipsum dolor sit amet.<br>
+                    <b>Iniciativa II.2</b> - Lorem ipsum dolor sit amet.<br><br>
+
+                    <b>Eixo III</b> - Promover a acessibilidade e a tecnologia assistiva.<br>
+                    <b>Iniciativa III.1</b> - Lorem ipsum dolor sit amet.<br><br>
+
+                    <b>Eixo IV</b> - Promover políticas para a educação, saúde, assistência social e direitos culturais.<br>
+                    <b>Iniciativa IV.1</b> - Lorem ipsum dolor sit amet.<br>
+                </td>
             `;
             tableBody.appendChild(actionsRow);
+        });
+
+        // Inicializar DataTable para ordenação
+        $(document).ready( function () {
+            $('#municipios-table').DataTable();
         });
     </script>
 </body>
