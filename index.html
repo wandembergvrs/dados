@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
@@ -30,6 +30,22 @@
             height: 500px;
             width: 100%;
             margin-top: 20px;
+        }
+        .legend {
+            background-color: white;
+            border: 1px solid #ccc;
+            padding: 10px;
+            font-size: 14px;
+        }
+        .legend div {
+            display: flex;
+            align-items: center;
+        }
+        .legend span {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            margin-right: 5px;
         }
     </style>
     <script>
@@ -65,39 +81,55 @@
                 <th>Indicador Sintético</th>
             </tr>
         </thead>
-        <tbody>
-            <script>
-                const municipios = ["São Paulo", "Rio de Janeiro", "Belo Horizonte", "Porto Alegre", "Salvador", "Fortaleza", "Curitiba", "Recife", "Goiânia", "Belém"];
-
-                let map = L.map('map').setView([-15.7801, -47.9292], 4);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap contributors'
-                }).addTo(map);
-
-                municipios.forEach((municipio, index) => {
-                    let indicador = getRandomIndicator();
-                    let color = indicador >= 0.7 ? 'green' : indicador >= 0.4 ? 'orange' : 'red';
-
-                    document.write(`<tr>
-                        <td>${municipio}</td>
-                        <td><button onclick="toggleActions('actions-${index}', this)" aria-expanded="false" aria-label="Expandir ações para ${municipio}">+</button></td>
-                        <td>✅</td>
-                        <td>🔵</td>
-                        <td>❌</td>
-                        <td>✅</td>
-                        <td>🔵</td>
-                        <td>${indicador}</td>
-                    </tr>`);
-
-                    L.circleMarker([-15.7801 + (Math.random() * 10 - 5), -47.9292 + (Math.random() * 10 - 5)], {
-                        radius: 8,
-                        color: color,
-                        fillColor: color,
-                        fillOpacity: 0.6
-                    }).bindPopup(`<b>${municipio}</b><br>Indicador: ${indicador}`).addTo(map);
-                });
-            </script>
+        <tbody id="municipios-body">
+            <!-- Linhas dos municípios serão geradas aqui via JavaScript -->
         </tbody>
     </table>
+
+    <script>
+        const municipios = ["São Paulo", "Rio de Janeiro", "Belo Horizonte", "Porto Alegre", "Salvador", "Fortaleza", "Curitiba", "Recife", "Goiânia", "Belém"];
+        const tableBody = document.getElementById('municipios-body');
+
+        let map = L.map('map').setView([-15.7801, -47.9292], 4);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Criando a legenda
+        const legend = L.control({position: 'topright'});
+        legend.onAdd = function () {
+            const div = L.DomUtil.create('div', 'legend');
+            div.innerHTML += '<div><span style="background: green;"></span> Indicador alto (>=0.7)</div>';
+            div.innerHTML += '<div><span style="background: orange;"></span> Indicador médio (>=0.4)</div>';
+            div.innerHTML += '<div><span style="background: red;"></span> Indicador baixo (<0.4)</div>';
+            return div;
+        };
+        legend.addTo(map);
+
+        municipios.forEach((municipio, index) => {
+            let indicador = getRandomIndicator();
+            let color = indicador >= 0.7 ? 'green' : indicador >= 0.4 ? 'orange' : 'red';
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${municipio}</td>
+                <td><button onclick="toggleActions('actions-${index}', this)" aria-expanded="false" aria-label="Expandir ações para ${municipio}">+</button></td>
+                <td>✅</td>
+                <td>🔵</td>
+                <td>❌</td>
+                <td>✅</td>
+                <td>🔵</td>
+                <td>${indicador}</td>
+            `;
+            tableBody.appendChild(row);
+
+            L.circleMarker([-15.7801 + (Math.random() * 10 - 5), -47.9292 + (Math.random() * 10 - 5)], {
+                radius: 8,
+                color: color,
+                fillColor: color,
+                fillOpacity: 0.6
+            }).bindPopup(`<b>${municipio}</b><br>Indicador: ${indicador}`).addTo(map);
+        });
+    </script>
 </body>
 </html>
