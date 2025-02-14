@@ -14,7 +14,6 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
         }
         th, td {
             border: 1px solid #ddd;
@@ -23,7 +22,6 @@
         }
         th {
             background-color: #f4f4f4;
-            cursor: pointer;
         }
         .actions {
             display: none;
@@ -32,6 +30,7 @@
         #map {
             height: 500px;
             width: 100%;
+            margin-top: 20px;
         }
         .legend {
             background-color: white;
@@ -65,47 +64,12 @@
             let value = mean + stdDev * z;
             return Math.max(0, Math.min(1, value)).toFixed(2);
         }
-
-        function sortTable(n) {
-            const table = document.getElementById("municipios-table");
-            let rows = table.rows;
-            let switching = true;
-            let dir = "desc";
-            let switchCount = 0;
-            
-            while (switching) {
-                switching = false;
-                let shouldSwitch = false;
-                for (let i = 1; i < (rows.length - 1); i++) {
-                    let x = rows[i].getElementsByTagName("TD")[n];
-                    let y = rows[i + 1].getElementsByTagName("TD")[n];
-                    let xVal = parseFloat(x.innerHTML);
-                    let yVal = parseFloat(y.innerHTML);
-                    
-                    if (dir === "desc" && xVal < yVal || dir === "asc" && xVal > yVal) {
-                        shouldSwitch = true;
-                        break;
-                    }
-                }
-                
-                if (shouldSwitch) {
-                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                    switching = true;
-                    switchCount++;
-                } else {
-                    if (switchCount === 0 && dir === "desc") {
-                        dir = "asc";
-                        switching = true;
-                    }
-                }
-            }
-        }
     </script>
 </head>
 <body>
     <h2>Painel de Municípios</h2>
     <div id="map" role="application" aria-label="Mapa do Brasil com municípios destacados"></div>
-    <table id="municipios-table">
+    <table>
         <thead>
             <tr>
                 <th>Município</th>
@@ -115,7 +79,7 @@
                 <th>Conferência Municipal</th>
                 <th>Fundo Municipal</th>
                 <th>Plano Municipal</th>
-                <th onclick="sortTable(7)">Indicador Sintético</th>
+                <th>Indicador Sintético</th>
             </tr>
         </thead>
         <tbody id="municipios-body">
