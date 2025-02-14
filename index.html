@@ -53,7 +53,7 @@
             var row = document.getElementById(id);
             var expanded = row.style.display === "none";
             row.style.display = expanded ? "table-row" : "none";
-            button.setAttribute("aria-expanded", expanded);
+            button.setAttribute("aria-expanded", expanded ? "true" : "false");
         }
 
         function getRandomIndicator() {
@@ -110,6 +110,7 @@
             let indicador = getRandomIndicator();
             let color = indicador >= 0.7 ? 'green' : indicador >= 0.4 ? 'orange' : 'red';
 
+            // Criando a linha da tabela
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${municipio}</td>
@@ -123,12 +124,22 @@
             `;
             tableBody.appendChild(row);
 
+            // Adicionando marcador no mapa
             L.circleMarker([-15.7801 + (Math.random() * 10 - 5), -47.9292 + (Math.random() * 10 - 5)], {
                 radius: 8,
                 color: color,
                 fillColor: color,
                 fillOpacity: 0.6
             }).bindPopup(`<b>${municipio}</b><br>Indicador: ${indicador}`).addTo(map);
+
+            // Criando linha para as ações
+            const actionsRow = document.createElement('tr');
+            actionsRow.id = `actions-${index}`;
+            actionsRow.style.display = "none";
+            actionsRow.innerHTML = `
+                <td colspan="8">Detalhes das ações para ${municipio}: Ações específicas aqui...</td>
+            `;
+            tableBody.appendChild(actionsRow);
         });
     </script>
 </body>
