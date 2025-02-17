@@ -154,6 +154,26 @@
                 fillOpacity: 0.6
             }).bindPopup(`<b>${municipio.nome}</b><br>Indicador: ${indicador}`).addTo(map);
         });
+
+        // Adicionando a legenda ao mapa
+        const legend = L.control({ position: 'bottomright' });
+
+        legend.onAdd = function () {
+            let div = L.DomUtil.create('div', 'info legend');
+            const grades = [0, 0.4, 0.7];
+            const labels = ["Baixo", "Médio", "Alto"];
+            const colors = ["red", "orange", "green"];
+
+            for (let i = 0; i < grades.length; i++) {
+                div.innerHTML += `
+                    <i style="background: ${colors[i]}"></i> ${labels[i]}<br>
+                `;
+            }
+
+            return div;
+        };
+
+        legend.addTo(map);
     </script>
 </body>
 </html>
