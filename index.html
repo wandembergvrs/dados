@@ -7,173 +7,171 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-        th { background-color: #f4f4f4; }
-        .expandable-content { display: none; }
-        .expand-btn {
-            cursor: pointer;
-            background: none;
-            border: none;
-            font-size: 16px;
-            transition: transform 0.3s, font-weight 0.3s;
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
         }
-        .expand-btn.active {
-            font-weight: bold;
-            transform: rotate(45deg);  /* Para dar um efeito de rotação */
+        table {
+            width: 100%;
+            border-collapse: collapse;
         }
-        #map { height: 500px; width: 100%; margin-top: 20px; }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .actions {
+            display: none;
+        }
+        #map {
+            height: 500px;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .legend {
+            background-color: white;
+            border: 1px solid #ccc;
+            padding: 10px;
+            font-size: 14px;
+        }
+        .legend div {
+            display: flex;
+            align-items: center;
+        }
+        .legend span {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            margin-right: 5px;
+        }
     </style>
     <script>
-        function toggleRow(id, btn) {
-            let row = document.getElementById(id);
-            row.style.display = row.style.display === "none" ? "table-row" : "none";
-            
-            // Alterna a classe active no botão
-            btn.classList.toggle('active');
+        function toggleActions(id, button) {
+            var row = document.getElementById(id);
+            var expanded = row.style.display === "none";
+            row.style.display = expanded ? "table-row" : "none";
+            button.setAttribute("aria-expanded", expanded ? "true" : "false");
         }
 
         function getRandomIndicator() {
-            return (Math.random() * 0.9 + 0.1).toFixed(2);
+            let mean = 0.5, stdDev = 0.15;
+            let u1 = Math.random(), u2 = Math.random();
+            let z = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+            let value = mean + stdDev * z;
+            return Math.max(0, Math.min(1, value)).toFixed(2);
         }
 
-        function getRandomStatus() {
-            const statuses = ["Não iniciada (0)", "Em execução (0,25)", "Em execução com entregas parciais (0,5)", "Concluída (1)", "Suspensa/Cancelada (0)"];
-            return statuses[Math.floor(Math.random() * statuses.length)];
-        }
-
-        function getRandomProponent() {
-            const proponents = ["Secretaria Municipal de Educação", "Secretaria Municipal de Saúde", "Secretaria Municipal de Assistência Social", "Secretaria Municipal de Desenvolvimento Econômico", "Prefeitura Municipal"];
-            return proponents[Math.floor(Math.random() * proponents.length)];
-        }
-
-        function getRandomDate() {
-            let year = 2020 + Math.floor(Math.random() * 5);
-            let month = ("0" + (1 + Math.floor(Math.random() * 12))).slice(-2);
-            let day = ("0" + (1 + Math.floor(Math.random() * 28))).slice(-2);
-            return `${day}/${month}/${year}`;
-        }
+        // Definir as ações mais abrangentes
+        const actionsTemplate = `
+            <b>Eixo I - Desenvolver ações para melhorar a gestão e participação social:</b><br>
+            Iniciativa I.1 - Lorem ipsum dolor sit amet.<br>
+            Iniciativa I.2 - Consectetur adipiscing elit.<br><br>
+            
+            <b>Eixo II - Enfrentar o capacitismo e a violência contra as pessoas com deficiência:</b><br>
+            Iniciativa II.1 - Lorem ipsum dolor sit amet.<br>
+            Iniciativa II.2 - Consectetur adipiscing elit.<br><br>
+            
+            <b>Eixo III - Promover a acessibilidade e a tecnologia assistiva:</b><br>
+            Iniciativa III.1 - Lorem ipsum dolor sit amet.<br><br>
+            
+            <b>Eixo IV - Promover políticas para a educação, saúde, assistência social e direitos culturais:</b><br>
+            Iniciativa IV.1 - Lorem ipsum dolor sit amet.<br><br>
+        `;
     </script>
 </head>
 <body>
     <h2>Painel de Municípios</h2>
-    <div id="map"></div>
+    <div id="map" role="application" aria-label="Mapa do Brasil com municípios destacados"></div>
     <table>
         <thead>
             <tr>
-                <th>Adesão Municipal</th>
                 <th>Município</th>
-                <th>Ações</th>
-                <th>Plano municipal</th>
-                <th>Unidade gestora</th>
-                <th>Conselho municipal</th>
-                <th>Indicador</th>
+                <th>Ações do Novo Viver sem Limite</th> 
+                <th>Plano municipal instituído</th> 
+                <th>Unidade gestora local indicada</th> 
+                <th>Conselho municipal em atividade</th> 
+                
+                <th>Indicador Sintético</th>
             </tr>
         </thead>
-        <tbody id="municipios-body"></tbody>
+        <tbody id="municipios-body">
+            <!-- Linhas dos municípios serão geradas aqui via JavaScript -->
+        </tbody>
     </table>
 
     <script>
         const municipios = [
-            { nome: "São Paulo", lat: -23.5505, lng: -46.6333 },
-            { nome: "Rio de Janeiro", lat: -22.9068, lng: -43.1729 },
-            { nome: "Belo Horizonte", lat: -19.9167, lng: -43.9345 },
-            { nome: "Porto Alegre", lat: -30.0346, lng: -51.2177 },
-            { nome: "Salvador", lat: -12.9777, lng: -38.5016 },
-            { nome: "Fortaleza", lat: -3.7172, lng: -38.5433 },
+            {nome: "São Paulo", lat: -23.5505, lng: -46.6333},
+            {nome: "Rio de Janeiro", lat: -22.9068, lng: -43.1729},
+            {nome: "Belo Horizonte", lat: -19.9167, lng: -43.9345},
+            {nome: "Porto Alegre", lat: -30.0346, lng: -51.2177},
+            {nome: "Salvador", lat: -12.9777, lng: -38.5016},
+            {nome: "Fortaleza", lat: -3.7172, lng: -38.5433},
+            {nome: "Curitiba", lat: -25.4284, lng: -49.2733},
+            {nome: "Recife", lat: -8.0476, lng: -34.877},
+            {nome: "Goiânia", lat: -16.6809, lng: -49.2539},
+            {nome: "Belém", lat: -1.4558, lng: -48.4902}
         ];
+        
+        // Ordenando municípios pelo indicador (do mais alto para o mais baixo)
+        municipios.sort((a, b) => getRandomIndicator() - getRandomIndicator());
 
-        municipios.forEach(m => m.indicador = getRandomIndicator());
-        municipios.sort((a, b) => b.indicador - a.indicador);
+        const tableBody = document.getElementById('municipios-body');
 
-        let map = L.map('map').fitBounds(municipios.map(m => [m.lat, m.lng]));
+        let map = L.map('map').setView([-15.7801, -47.9292], 4);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        const tableBody = document.getElementById('municipios-body');
+        // Criando a legenda
+        const legend = L.control({position: 'topright'});
+        legend.onAdd = function () {
+            const div = L.DomUtil.create('div', 'legend');
+            div.innerHTML += '<div><span style="background: green;"></span> Indicador alto (>=0.7)</div>';
+            div.innerHTML += '<div><span style="background: orange;"></span> Indicador médio (>=0.4)</div>';
+            div.innerHTML += '<div><span style="background: red;"></span> Indicador baixo (<0.4)</div>';
+            return div;
+        };
+        legend.addTo(map);
 
         municipios.forEach((municipio, index) => {
-            let indicador = municipio.indicador;
+            let indicador = getRandomIndicator();
             let color = indicador >= 0.7 ? 'green' : indicador >= 0.4 ? 'orange' : 'red';
 
+            // Criando a linha da tabela
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td><button class="expand-btn" onclick="toggleRow('adesao-${index}', this)">+</button></td>
                 <td>${municipio.nome}</td>
-                <td><button class="expand-btn" onclick="toggleRow('actions-${index}', this)">+</button></td>
-                <td>${Math.random() > 0.5 ? '✅ Sim' : '❌ Não'}</td>
-                <td>${Math.random() > 0.5 ? '✅ Sim' : '❌ Não'}</td>
-                <td>${Math.random() > 0.5 ? '✅ Sim' : '❌ Não'}</td>
+                <td><button onclick="toggleActions('actions-${index}', this)" aria-expanded="false" aria-label="Expandir ações para ${municipio.nome}">+</button></td>
+                <td>✅</td>
+                <td>🔵</td>
+                <td>❌</td>
+                <td>✅</td>
+                <td>🔵</td>
                 <td>${indicador}</td>
             `;
             tableBody.appendChild(row);
 
-            const adesaoRow = document.createElement('tr');
-            adesaoRow.id = `adesao-${index}`;
-            adesaoRow.className = "expandable-content";
-            adesaoRow.innerHTML = `
-                <td colspan="7">
-                    <strong>Data de adesão:</strong> ${getRandomDate()}<br>
-                    <strong>Unidade gestora do Plano:</strong> ${getRandomProponent()}
-                </td>
-            `;
-            tableBody.appendChild(adesaoRow);
-
-            const actionsRow = document.createElement('tr');
-            actionsRow.id = `actions-${index}`;
-            actionsRow.className = "expandable-content";
-            actionsRow.innerHTML = `
-                <td colspan="7">
-                    <table>
-                        <tr>
-                            <th>Nome da Iniciativa</th>
-                            <th>Descrição da Iniciativa</th>
-                            <th>Situação da Iniciativa</th>
-                        </tr>
-                        <tr>
-                            <td>Capacitação de gestores</td>
-                            <td>Meta: Formação de 100 gestores<br>Prazo: 2024<br>Proponente: ${getRandomProponent()}</td>
-                            <td>${getRandomStatus()}</td>
-                        </tr>
-                        <tr>
-                            <td>Expansão de serviços</td>
-                            <td>Meta: Ampliar serviços em 20%<br>Prazo: 2025<br>Proponente: ${getRandomProponent()}</td>
-                            <td>${getRandomStatus()}</td>
-                        </tr>
-                    </table>
-                </td>
-            `;
-            tableBody.appendChild(actionsRow);
-
+            // Adicionando marcador no mapa
             L.circleMarker([municipio.lat, municipio.lng], {
                 radius: 8,
                 color: color,
                 fillColor: color,
                 fillOpacity: 0.6
             }).bindPopup(`<b>${municipio.nome}</b><br>Indicador: ${indicador}`).addTo(map);
+
+            // Criando linha para as ações
+            const actionsRow = document.createElement('tr');
+            actionsRow.id = `actions-${index}`;
+            actionsRow.style.display = "none";
+            actionsRow.innerHTML = `
+                <td colspan="8">${actionsTemplate}</td>
+            `;
+            tableBody.appendChild(actionsRow);
         });
-
-        // Adicionando a legenda ao mapa
-        const legend = L.control({ position: 'bottomright' });
-
-        legend.onAdd = function () {
-            let div = L.DomUtil.create('div', 'info legend');
-            const grades = [0, 0.4, 0.7];
-            const labels = ["Baixo", "Médio", "Alto"];
-            const colors = ["red", "orange", "green"];
-
-            for (let i = 0; i < grades.length; i++) {
-                div.innerHTML += `
-                    <i style="background: ${colors[i]}"></i> ${labels[i]}<br>
-                `;
-            }
-
-            return div;
-        };
-
-        legend.addTo(map);
     </script>
 </body>
 </html>
