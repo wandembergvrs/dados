@@ -12,10 +12,49 @@
         th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
         th { background-color: #f4f4f4; }
         .expandable-content { display: none; }
-        .expand-btn { cursor: pointer; background: none; border: none; font-size: 16px; }
-        .rotate { transform: rotate(90deg); }
+        .expand-btn {
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 16px;
+            transition: transform 0.3s, font-weight 0.3s;
+        }
+        .expand-btn.active {
+            font-weight: bold;
+            transform: rotate(45deg);  /* Para dar um efeito de rotação */
+        }
         #map { height: 500px; width: 100%; margin-top: 20px; }
     </style>
+    <script>
+        function toggleRow(id, btn) {
+            let row = document.getElementById(id);
+            row.style.display = row.style.display === "none" ? "table-row" : "none";
+            
+            // Alterna a classe active no botão
+            btn.classList.toggle('active');
+        }
+
+        function getRandomIndicator() {
+            return (Math.random() * 0.9 + 0.1).toFixed(2);
+        }
+
+        function getRandomStatus() {
+            const statuses = ["Não iniciada (0)", "Em execução (0,25)", "Em execução com entregas parciais (0,5)", "Concluída (1)", "Suspensa/Cancelada (0)"];
+            return statuses[Math.floor(Math.random() * statuses.length)];
+        }
+
+        function getRandomProponent() {
+            const proponents = ["Secretaria Municipal de Educação", "Secretaria Municipal de Saúde", "Secretaria Municipal de Assistência Social", "Secretaria Municipal de Desenvolvimento Econômico", "Prefeitura Municipal"];
+            return proponents[Math.floor(Math.random() * proponents.length)];
+        }
+
+        function getRandomDate() {
+            let year = 2020 + Math.floor(Math.random() * 5);
+            let month = ("0" + (1 + Math.floor(Math.random() * 12))).slice(-2);
+            let day = ("0" + (1 + Math.floor(Math.random() * 28))).slice(-2);
+            return `${day}/${month}/${year}`;
+        }
+    </script>
 </head>
 <body>
     <h2>Painel de Municípios</h2>
@@ -34,7 +73,7 @@
         </thead>
         <tbody id="municipios-body"></tbody>
     </table>
-    
+
     <script>
         const municipios = [
             { nome: "São Paulo", lat: -23.5505, lng: -46.6333 },
@@ -45,90 +84,76 @@
             { nome: "Fortaleza", lat: -3.7172, lng: -38.5433 },
         ];
 
-        function getRandomValue(arr) {
-            return arr[Math.floor(Math.random() * arr.length)];
-        }
+        municipios.forEach(m => m.indicador = getRandomIndicator());
+        municipios.sort((a, b) => b.indicador - a.indicador);
 
-        function generateMunicipiosData() {
-            municipios.forEach(m => {
-                m.indicador = (Math.random() * 0.9 + 0.1).toFixed(2);
-                m.plano = Math.random() > 0.5 ? '✅ Sim' : '❌ Não';
-                m.gestora = Math.random() > 0.5 ? '✅ Sim' : '❌ Não';
-                m.conselho = Math.random() > 0.5 ? '✅ Sim' : '❌ Não';
-            });
-            municipios.sort((a, b) => b.indicador - a.indicador);
-        }
+        let map = L.map('map').fitBounds(municipios.map(m => [m.lat, m.lng]));
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
 
-        function toggleRow(id) {
-            let row = document.getElementById(id);
-            row.style.display = row.style.display === "none" ? "table-row" : "none";
-        }
+        const tableBody = document.getElementById('municipios-body');
 
-        function createRow(municipio, index) {
-            let color = municipio.indicador >= 0.7 ? 'green' : municipio.indicador >= 0.4 ? 'orange' : 'red';
-            return `
-                <tr>
-                    <td><button class="expand-btn" onclick="toggleRow('adesao-${index}')">▶</button></td>
-                    <td>${municipio.nome}</td>
-                    <td><button class="expand-btn" onclick="toggleRow('actions-${index}')">▶</button></td>
-                    <td>${municipio.plano}</td>
-                    <td>${municipio.gestora}</td>
-                    <td>${municipio.conselho}</td>
-                    <td style="color:${color}; font-weight:bold;">${municipio.indicador}</td>
-                </tr>
-                <tr id="adesao-${index}" class="expandable-content">
-                    <td colspan="7"><strong>Data de adesão:</strong> ${getRandomDate()}<br><strong>Unidade gestora do Plano:</strong> ${getRandomProponent()}</td>
-                </tr>
-                <tr id="actions-${index}" class="expandable-content">
-                    <td colspan="7">
-                        <table>
-                            <tr>
-                                <th>Nome da Iniciativa</th>
-                                <th>Descrição da Iniciativa</th>
-                                <th>Situação</th>
-                            </tr>
-                            <tr>
-                                <td>Capacitação de gestores</td>
-                                <td>Formação de 100 gestores</td>
-                                <td>${getRandomStatus()}</td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>`;
-        }
+        municipios.forEach((municipio, index) => {
+            let indicador = municipio.indicador;
+            let color = indicador >= 0.7 ? 'green' : indicador >= 0.4 ? 'orange' : 'red';
 
-        function getRandomDate() {
-            return `${('0' + (1 + Math.floor(Math.random() * 28))).slice(-2)}/
-                    ${('0' + (1 + Math.floor(Math.random() * 12))).slice(-2)}/
-                    ${2020 + Math.floor(Math.random() * 5)}`;
-        }
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><button class="expand-btn" onclick="toggleRow('adesao-${index}', this)">+</button></td>
+                <td>${municipio.nome}</td>
+                <td><button class="expand-btn" onclick="toggleRow('actions-${index}', this)">+</button></td>
+                <td>${Math.random() > 0.5 ? '✅ Sim' : '❌ Não'}</td>
+                <td>${Math.random() > 0.5 ? '✅ Sim' : '❌ Não'}</td>
+                <td>${Math.random() > 0.5 ? '✅ Sim' : '❌ Não'}</td>
+                <td>${indicador}</td>
+            `;
+            tableBody.appendChild(row);
 
-        function getRandomStatus() {
-            return getRandomValue(["Não iniciada", "Em execução", "Concluída", "Suspensa"]);
-        }
+            const adesaoRow = document.createElement('tr');
+            adesaoRow.id = `adesao-${index}`;
+            adesaoRow.className = "expandable-content";
+            adesaoRow.innerHTML = `
+                <td colspan="7">
+                    <strong>Data de adesão:</strong> ${getRandomDate()}<br>
+                    <strong>Unidade gestora do Plano:</strong> ${getRandomProponent()}
+                </td>
+            `;
+            tableBody.appendChild(adesaoRow);
 
-        function getRandomProponent() {
-            return getRandomValue(["Secretaria de Educação", "Secretaria de Saúde", "Prefeitura"]);
-        }
+            const actionsRow = document.createElement('tr');
+            actionsRow.id = `actions-${index}`;
+            actionsRow.className = "expandable-content";
+            actionsRow.innerHTML = `
+                <td colspan="7">
+                    <table>
+                        <tr>
+                            <th>Nome da Iniciativa</th>
+                            <th>Descrição da Iniciativa</th>
+                            <th>Situação da Iniciativa</th>
+                        </tr>
+                        <tr>
+                            <td>Capacitação de gestores</td>
+                            <td>Meta: Formação de 100 gestores<br>Prazo: 2024<br>Proponente: ${getRandomProponent()}</td>
+                            <td>${getRandomStatus()}</td>
+                        </tr>
+                        <tr>
+                            <td>Expansão de serviços</td>
+                            <td>Meta: Ampliar serviços em 20%<br>Prazo: 2025<br>Proponente: ${getRandomProponent()}</td>
+                            <td>${getRandomStatus()}</td>
+                        </tr>
+                    </table>
+                </td>
+            `;
+            tableBody.appendChild(actionsRow);
 
-        function initializeMap() {
-            let map = L.map('map').fitBounds(municipios.map(m => [m.lat, m.lng]));
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
-
-            municipios.forEach(municipio => {
-                L.circleMarker([municipio.lat, municipio.lng], {
-                    radius: 8,
-                    color: municipio.indicador >= 0.7 ? 'green' : municipio.indicador >= 0.4 ? 'orange' : 'red',
-                    fillOpacity: 0.6
-                }).bindPopup(`<b>${municipio.nome}</b><br>Indicador: ${municipio.indicador}`).addTo(map);
-            });
-        }
-
-        generateMunicipiosData();
-        document.getElementById('municipios-body').innerHTML = municipios.map(createRow).join('');
-        initializeMap();
+            L.circleMarker([municipio.lat, municipio.lng], {
+                radius: 8,
+                color: color,
+                fillColor: color,
+                fillOpacity: 0.6
+            }).bindPopup(`<b>${municipio.nome}</b><br>Indicador: ${indicador}`).addTo(map);
+        });
     </script>
 </body>
 </html>
