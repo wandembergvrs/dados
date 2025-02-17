@@ -65,21 +65,16 @@
             return Math.max(0, Math.min(1, value)).toFixed(2);
         }
 
-        const actionsTemplate = `
-            <b>Eixo I - Gestão e participação social:</b><br>
-            - Capacitação de gestores locais.<br>
-            - Criação de fóruns de participação social.<br><br>
-            
-            <b>Eixo II - Combate ao capacitismo e violência:</b><br>
-            - Campanhas de conscientização.<br>
-            - Apoio a vítimas de violência.<br><br>
-            
-            <b>Eixo III - Acessibilidade e tecnologia assistiva:</b><br>
-            - Implementação de recursos tecnológicos.<br><br>
-            
-            <b>Eixo IV - Educação, saúde e assistência:</b><br>
-            - Expansão de serviços acessíveis.<br><br>
-        `;
+        function getRandomStatus() {
+            const statuses = [
+                "Não iniciada (0)",
+                "Em execução (0,25)",
+                "Em execução com entregas parciais (0,5)",
+                "Concluída (1)",
+                "Suspensa/Cancelada (0)"
+            ];
+            return statuses[Math.floor(Math.random() * statuses.length)];
+        }
     </script>
 </head>
 <body>
@@ -149,18 +144,38 @@
             `;
             tableBody.appendChild(row);
 
+            const actionsRow = document.createElement('tr');
+            actionsRow.id = `actions-${index}`;
+            actionsRow.style.display = "none";
+            actionsRow.innerHTML = `
+                <td colspan="6">
+                    <table>
+                        <tr>
+                            <th>Nome da Iniciativa</th>
+                            <th>Descrição da Iniciativa</th>
+                            <th>Situação da Iniciativa</th>
+                        </tr>
+                        <tr>
+                            <td>Capacitação de gestores</td>
+                            <td>Meta: Formação de 100 gestores<br>Prazo: 2024<br>Proponente: Secretaria Municipal</td>
+                            <td>${getRandomStatus()}</td>
+                        </tr>
+                        <tr>
+                            <td>Expansão de serviços</td>
+                            <td>Meta: Ampliar serviços em 20%<br>Prazo: 2025<br>Proponente: Prefeitura</td>
+                            <td>${getRandomStatus()}</td>
+                        </tr>
+                    </table>
+                </td>
+            `;
+            tableBody.appendChild(actionsRow);
+
             L.circleMarker([municipio.lat, municipio.lng], {
                 radius: 8,
                 color: color,
                 fillColor: color,
                 fillOpacity: 0.6
             }).bindPopup(`<b>${municipio.nome}</b><br>Indicador: ${indicador}`).addTo(map);
-
-            const actionsRow = document.createElement('tr');
-            actionsRow.id = `actions-${index}`;
-            actionsRow.style.display = "none";
-            actionsRow.innerHTML = `<td colspan="6">${actionsTemplate}</td>`;
-            tableBody.appendChild(actionsRow);
         });
     </script>
 </body>
