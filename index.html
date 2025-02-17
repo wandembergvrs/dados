@@ -8,64 +8,152 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        #map { height: 500px; width: 100%; margin-bottom: 20px; }
-        .legend {
-            background: white;
-            padding: 15px;
-            border-radius: 5px;
-            line-height: 1.8;
-            font-size: 14px;
-            font-weight: bold;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-        }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: #f4f4f4; }
+        .expandable-content { display: none; }
+        .expand-btn { cursor: pointer; background: none; border: none; font-size: 16px; }
+        #map { height: 500px; width: 100%; margin-top: 20px; }
+        .legend { background: white; padding: 10px; border-radius: 5px; line-height: 1.5; }
         .legend div { display: flex; align-items: center; }
-        .legend span { width: 30px; height: 15px; margin-right: 8px; display: inline-block; }
+        .legend span { width: 20px; height: 10px; margin-right: 5px; display: inline-block; }
     </style>
 </head>
 <body>
     <h2>Painel de Municípios</h2>
     <div id="map"></div>
 
+    <table>
+        <thead>
+            <tr>
+                <th>Adesão Municipal</th>
+                <th>Município</th>
+                <th>Ações</th>
+                <th>Plano municipal</th>
+                <th>Unidade gestora</th>
+                <th>Conselho municipal</th>
+                <th>Indicador</th>
+            </tr>
+        </thead>
+        <tbody id="municipios-body"></tbody>
+    </table>
+
     <script>
+        function toggleRow(id) {
+            let row = document.getElementById(id);
+            row.style.display = row.style.display === "none" ? "table-row" : "none";
+        }
+
+        function getRandomIndicator() {
+            return (Math.random() * 0.9 + 0.1).toFixed(2);
+        }
+
+        function getRandomStatus() {
+            const statuses = ["Não iniciada (0)", "Em execução (0,25)", "Em execução com entregas parciais (0,5)", "Concluída (1)", "Suspensa/Cancelada (0)"];
+            return statuses[Math.floor(Math.random() * statuses.length)];
+        }
+
+        function getRandomProponent() {
+            const proponents = ["Secretaria Municipal de Educação", "Secretaria Municipal de Saúde", "Secretaria Municipal de Assistência Social", "Secretaria Municipal de Desenvolvimento Econômico", "Prefeitura Municipal"];
+            return proponents[Math.floor(Math.random() * proponents.length)];
+        }
+
+        function getRandomDate() {
+            let year = 2020 + Math.floor(Math.random() * 5);
+            let month = ("0" + (1 + Math.floor(Math.random() * 12))).slice(-2);
+            let day = ("0" + (1 + Math.floor(Math.random() * 28))).slice(-2);
+            return `${day}/${month}/${year}`;
+        }
+
         const municipios = [
-            { nome: "São Paulo", lat: -23.5505, lng: -46.6333, indicador: 0.85 },
-            { nome: "Rio de Janeiro", lat: -22.9068, lng: -43.1729, indicador: 0.65 },
-            { nome: "Belo Horizonte", lat: -19.9167, lng: -43.9345, indicador: 0.45 },
-            { nome: "Porto Alegre", lat: -30.0346, lng: -51.2177, indicador: 0.75 },
-            { nome: "Salvador", lat: -12.9777, lng: -38.5016, indicador: 0.35 },
-            { nome: "Fortaleza", lat: -3.7172, lng: -38.5433, indicador: 0.95 },
+            { nome: "São Paulo", lat: -23.5505, lng: -46.6333 },
+            { nome: "Rio de Janeiro", lat: -22.9068, lng: -43.1729 },
+            { nome: "Belo Horizonte", lat: -19.9167, lng: -43.9345 },
+            { nome: "Porto Alegre", lat: -30.0346, lng: -51.2177 },
+            { nome: "Salvador", lat: -12.9777, lng: -38.5016 },
+            { nome: "Fortaleza", lat: -3.7172, lng: -38.5433 },
         ];
 
-        const map = L.map('map', {
-            maxBounds: [[5.3, -73.9], [-33.7, -34.8]], // Restrição para o Brasil
-            maxBoundsViscosity: 1.0,
-            minZoom: 4,
-            maxZoom: 10
-        }).setView([-15.78, -47.93], 4); // Centro aproximado do Brasil
+        municipios.forEach(m => m.indicador = getRandomIndicator());
+        municipios.sort((a, b) => b.indicador - a.indicador);
 
+        let map = L.map('map').fitBounds(municipios.map(m => [m.lat, m.lng]));
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
+        // Criando a legenda do mapa
         const legend = L.control({ position: 'topright' });
         legend.onAdd = function () {
             const div = L.DomUtil.create('div', 'legend');
-            div.innerHTML += '<div><span style="background: green;"></span> Indicador alto (≥ 0.7)</div>';
-            div.innerHTML += '<div><span style="background: orange;"></span> Indicador médio (0.4 - 0.69)</div>';
-            div.innerHTML += '<div><span style="background: red;"></span> Indicador baixo (< 0.4)</div>';
+            div.innerHTML += '<div><span style="background: green;"></span> Indicador alto (>=0.7)</div>';
+            div.innerHTML += '<div><span style="background: orange;"></span> Indicador médio (>=0.4)</div>';
+            div.innerHTML += '<div><span style="background: red;"></span> Indicador baixo (<0.4)</div>';
             return div;
         };
         legend.addTo(map);
 
-        municipios.forEach(municipio => {
-            let color = municipio.indicador >= 0.7 ? 'green' : municipio.indicador >= 0.4 ? 'orange' : 'red';
+        const tableBody = document.getElementById('municipios-body');
+
+        municipios.forEach((municipio, index) => {
+            let indicador = municipio.indicador;
+            let color = indicador >= 0.7 ? 'green' : indicador >= 0.4 ? 'orange' : 'red';
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><button class="expand-btn" onclick="toggleRow('adesao-${index}')">+</button></td>
+                <td>${municipio.nome}</td>
+                <td><button class="expand-btn" onclick="toggleRow('actions-${index}')">+</button></td>
+                <td>${Math.random() > 0.5 ? '✅ Sim' : '❌ Não'}</td>
+                <td>${Math.random() > 0.5 ? '✅ Sim' : '❌ Não'}</td>
+                <td>${Math.random() > 0.5 ? '✅ Sim' : '❌ Não'}</td>
+                <td>${indicador}</td>
+            `;
+            tableBody.appendChild(row);
+
+            const adesaoRow = document.createElement('tr');
+            adesaoRow.id = `adesao-${index}`;
+            adesaoRow.className = "expandable-content";
+            adesaoRow.innerHTML = `
+                <td colspan="7">
+                    <strong>Data de adesão:</strong> ${getRandomDate()}<br>
+                    <strong>Unidade gestora do Plano:</strong> ${getRandomProponent()}
+                </td>
+            `;
+            tableBody.appendChild(adesaoRow);
+
+            const actionsRow = document.createElement('tr');
+            actionsRow.id = `actions-${index}`;
+            actionsRow.className = "expandable-content";
+            actionsRow.innerHTML = `
+                <td colspan="7">
+                    <table>
+                        <tr>
+                            <th>Nome da Iniciativa</th>
+                            <th>Descrição da Iniciativa</th>
+                            <th>Situação da Iniciativa</th>
+                        </tr>
+                        <tr>
+                            <td>Capacitação de gestores</td>
+                            <td>Meta: Formação de 100 gestores<br>Prazo: 2024<br>Proponente: ${getRandomProponent()}</td>
+                            <td>${getRandomStatus()}</td>
+                        </tr>
+                        <tr>
+                            <td>Expansão de serviços</td>
+                            <td>Meta: Ampliar serviços em 20%<br>Prazo: 2025<br>Proponente: ${getRandomProponent()}</td>
+                            <td>${getRandomStatus()}</td>
+                        </tr>
+                    </table>
+                </td>
+            `;
+            tableBody.appendChild(actionsRow);
 
             L.circleMarker([municipio.lat, municipio.lng], {
                 radius: 8,
                 color: color,
                 fillColor: color,
                 fillOpacity: 0.6
-            }).bindPopup(`<b>${municipio.nome}</b><br>Indicador: ${municipio.indicador}`).addTo(map);
+            }).bindPopup(`<b>${municipio.nome}</b><br>Indicador: ${indicador}`).addTo(map);
         });
     </script>
 </body>
